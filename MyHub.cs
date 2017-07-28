@@ -111,7 +111,7 @@ namespace MvcSignal
 
 
         //--group ***** Receive Request From Client ***** { Whenever User close session then OnDisconneced will be occurs }
-        public override System.Threading.Tasks.Task OnDisconnected()
+        public override System.Threading.Tasks.Task OnDisconnected(bool stopCalled)
         {
 
             var item = UsersList.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
@@ -143,7 +143,7 @@ namespace MvcSignal
 
             }
 
-            return base.OnDisconnected();
+            return base.OnDisconnected(stopCalled);
         }
     }
 }
