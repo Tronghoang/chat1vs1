@@ -1,0 +1,175 @@
+﻿@{
+    ViewBag.Title = "Chat";
+}
+
+
+
+<div id="divLogin" class="mylogin">
+
+    User Name:<input id="txtUserName" type="text" /><br />
+       Password :   <input id="txtPassword" type="password" /><br />
+    <input id="btnLogin" type="button" value="Login" />
+    <div id="divalarm"></div>
+</div>
+
+<div id="divChat" class="mylogin">
+
+<div id="welcome"></div><br />
+<input id="txtMessage" type="text" />
+<input id="btnSendMessage" type="button" value="Send" />
+<div id="divMessage"></div>
+
+
+</div>
+
+    <input id="hUserId" type="hidden" />
+    <input id="hId" type="hidden" />
+    <input id="hUserName" type="hidden" />
+    <input id="hGroup" type="hidden" />
+
+@section scripts {
+   
+    <script src="~/Scripts/jquery-1.8.2.min.js"></script>
+    <script src="~/Scripts/jquery.signalR-2.0.1.min.js" type="text/javascript"></script>
+    <script src="~/signalr/hubs" type="text/javascript"></script>
+   <script>
+       $(function () { 
+          
+           $("#divChat").hide();
+           $("#divLogin").show();
+           //Khai báo 
+           var objHub = $.connection.myHub;
+
+           loadClientMethods(objHub);
+           //kết nối
+           $.connection.hub.start().done(function () {
+               //load sự kiện(đăng nhập hoặc chat)
+               loadEvents(objHub);
+
+           });
+
+       });
+
+       let idmuonxoa = 1;
+       function loadEvents(objHub) {
+          
+           $("#btnLogin").click(function () {
+
+               var name = $("#txtUserName").val();
+               var pass = $("#txtPassword").val();
+
+               if (name.length > 0 && pass.length > 0) {
+                   //Trả dữ liệu về server kiẻm tra
+                   objHub.server.connect(name, pass);
+
+               }
+               else {
+                   alert("Tài khoản hoặc mật khẩu không đúng");
+               }
+
+           });
+
+
+           $('#btnSendMessage').click(function () {
+               idmuonxoa++;
+               
+               var msg = $("#txtMessage").val();
+
+               if (msg.length > 0) {
+
+                   var userName = $('#hUserName').val();
+                   // <<<<<-- ***** Return to Server [  SendMessageToGroup  ] *****
+                   objHub.server.sendMessageToGroup(userName, msg);
+
+               }
+           });
+
+
+           $("#txtPassword").keypress(function (e) {
+               if (e.which == 13) {
+                   $("#btnLogin").click();
+               }
+           });
+
+           $("#txtMessage").keypress(function (e) {
+               if (e.which == 13) {
+                   $('#btnSendMessage').click();
+               }
+           });
+
+
+       }
+
+
+
+       function loadClientMethods(objHub) {
+
+           objHub.client.NoExistAdmin = function () {
+               var divNoExist = $('<div><p>Không có admin trực tuyến, mong bạn quay lại sau</P></div>');
+               $("#divChat").hide();
+               $("#divLogin").show();
+
+               $(divNoExist).hide();
+               $('#divalarm').prepend(divNoExist);
+               $(divNoExist).fadeIn(900).delay(9000).fadeOut(900);
+           }
+
+           objHub.client.getMessages = function (userName, message) {
+               $("#txtMessage").val('');
+               $('#divMessage').append('<div id="'+idmuonxoa+'"><p>' + userName + ': ' + message + '</p>'
+                  +'<div> <img id="imgDelete" src="~/Content/delete.png" /></div></div>');
+               var height = $('#divMessage')[0].scrollHeight;
+               $('#divMessage').scrollTop(height);
+               // DELETE BUTTON IMAGE
+               $('#imgDelete').click(function () {
+                   $('#' + idmuonxoa).remove();
+                   @*function UpdateTrangThai(id, TrangThai) {
+                       //console.log(id);
+                       console.log(TrangThai);
+                       $.ajax({
+                           type: "post",
+                           url: "@Url.Action("UpdateTrangThai", "BaiHats")",
+                           ajaxasync: true,
+                       data: { id: id },
+                       success: function (res) {
+                           if (res == true) {
+                              do something
+                           }
+                           //if (res == data) {
+
+                           //    alert("adas");
+                           //    dataTable.rows().invalidate().draw();
+                           //}
+                       },
+                       error: function (data) {
+                           alert(data.x);
+                       }
+                   });*@
+
+               }
+
+               });
+           }
+
+           objHub.client.onConnected = function (id, userName, UserID, userGroup) {
+               
+               var strWelcome = 'Welcome' + +userName;
+               $('#welcome').append('<div><p>Welcome:' + userName + '</p></div>');
+                             
+               $('#hId').val(id);
+               $('#hUserId').val(UserID);
+               $('#hUserName').val(userName);
+               $('#hGroup').val(userGroup);
+
+               $("#divChat").show();
+               $("#divLogin").hide();
+
+
+           }
+
+
+       }
+
+
+    </script>
+}
